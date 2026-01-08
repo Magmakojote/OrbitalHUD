@@ -1,8 +1,8 @@
-// 1. Karte initialisieren (Standard-Zoom-Buttons ausblenden)
+// 1. Karte initialisieren (Standard-Zoom aus)
 const map = L.map('map', { zoomControl: false }).setView([0, 0], 3);
 
-// Zoom-Buttons unten rechts platzieren
-L.control.zoom({ position: 'bottomright' }).addTo(map);
+// Zoom-Buttons jetzt OBEN LINKS platzieren
+L.control.zoom({ position: 'topleft' }).addTo(map);
 
 // 2. Basemap (Hintergrundkarte) - CartoDB Dark Matter
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
