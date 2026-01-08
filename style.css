@@ -1,0 +1,102 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+}
+
+#map {
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+
+/* --- Info Panel --- */
+#info-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(15, 23, 42, 0.9);
+    color: white;
+    padding: 15px;
+    border-radius: 8px; /* Etwas eckiger für technischeren Look */
+    border-left: 4px solid #00ffcc;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    min-width: 240px;
+}
+
+h2 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #00ffcc;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 5px;
+}
+
+.beta-badge {
+    font-size: 0.5em;
+    color: #fff;
+    background: #334155;
+    padding: 2px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+p {
+    margin: 8px 0;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* WICHTIG: Span-Farbe nur im Panel erzwingen, nicht global */
+#info-panel span {
+    color: #f1f5f9;
+    font-weight: 500;
+    font-family: 'Courier New', monospace;
+}
+
+/* --- LEAFLET UI FIXES & DARK MODE --- */
+
+/* 1. Zoom Buttons und Layer Control dunkel machen */
+.leaflet-control-zoom a, .leaflet-control-layers {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    color: #fff !important;
+    border: 1px solid #334155 !important;
+}
+/* Hover Effekt für Zoom Buttons */
+.leaflet-control-zoom a:hover {
+    background-color: #334155 !important;
+    color: #00ffcc !important;
+}
+
+/* 2. Text in der Layer Control lesbar machen */
+.leaflet-control-layers-expanded {
+    color: #fff !important;
+    padding: 10px !important;
+    line-height: 1.5;
+}
+
+/* 3. Das Popup stylen (Dark Mode) */
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: rgba(15, 23, 42, 0.95);
+    color: white;
+    border: 1px solid #00ffcc;
+    border-radius: 0; /* Eckig wirkt technischer */
+}
+.leaflet-popup-content {
+    margin: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* --- ISS ICON --- */
+.iss-icon-style {
+    filter: invert(1) drop-shadow(0 0 8px #00ffcc); 
+}
