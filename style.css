@@ -4,7 +4,6 @@ body {
     background-color: #1a1a1a;
     font-family: 'Helvetica Neue', Arial, sans-serif;
     overflow: hidden;
-    /* WICHTIG: Definiert den sicheren Bereich für iPhones/Androids mit Notch/runden Ecken */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
@@ -12,18 +11,18 @@ body {
 }
 
 #map {
-    position: absolute; /* Wichtig damit map den ganzen Screen füllt */
+    position: absolute;
     top: 0; 
     bottom: 0; 
     width: 100%;
     z-index: 1;
 }
 
-/* --- Info Panel (Jetzt UNTEN LINKS) --- */
+/* --- Info Panel --- */
 #info-panel {
     position: absolute;
-    bottom: 35px; /* Abstand vom unteren Rand */
-    left: 20px;   /* Abstand vom linken Rand */
+    bottom: 35px;
+    left: 20px;
     background: rgba(15, 23, 42, 0.85);
     color: white;
     padding: 15px;
@@ -33,18 +32,26 @@ body {
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     min-width: 200px;
-    /* Damit es auf kleinen Handys nicht zu breit wird */
-    max-width: 60vw; 
+    max-width: 60vw;
+    transition: all 0.3s ease; /* Weicher Übergang bei Layout-Änderungen */
+}
+
+/* Layout für Titelzeile mit Button */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 5px;
 }
 
 h2 {
-    margin: 0 0 10px 0;
+    margin: 0;
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: #00ffcc;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 5px;
 }
 
 .beta-badge {
@@ -54,6 +61,25 @@ h2 {
     padding: 2px 5px;
     border-radius: 3px;
     vertical-align: middle;
+}
+
+/* Tracking Button */
+#tracking-btn {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #64748b;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#tracking-btn.active {
+    background: rgba(0, 255, 204, 0.1);
+    color: #00ffcc;
+    border-color: #00ffcc;
+    box-shadow: 0 0 5px rgba(0, 255, 204, 0.3);
 }
 
 p {
@@ -71,9 +97,7 @@ p {
     margin-left: 10px;
 }
 
-/* --- Touch Optimierung & Dark Mode für Leaflet --- */
-
-/* 1. Layer Control (Oben Rechts) - Touch Friendly machen */
+/* --- LEAFLET UI ANPASSUNGEN --- */
 .leaflet-control-layers {
     border: none !important;
     border-radius: 8px !important;
@@ -81,75 +105,57 @@ p {
     color: white !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
 }
-
-/* Der Button selbst (wenn eingeklappt) */
 .leaflet-touch .leaflet-control-layers-toggle {
-    width: 44px;  /* Größer für Finger */
-    height: 44px;
-    background-size: 24px;
+    width: 44px; height: 44px; background-size: 24px;
 }
-
-/* Das ausgeklappte Menü */
 .leaflet-control-layers-expanded {
-    padding: 15px !important;
-    font-size: 16px !important; /* Größere Schrift */
-    line-height: 2 !important;  /* Mehr Abstand zwischen Zeilen */
-    min-width: 150px;
+    padding: 15px !important; font-size: 16px !important; line-height: 2 !important; min-width: 150px;
 }
-
-/* Die Checkboxen vergrößern */
 .leaflet-control-layers-selector {
-    transform: scale(1.5); /* 1.5x so groß */
-    margin-right: 10px !important;
-    accent-color: #00ffcc; /* Checkbox Farbe in Cyan (in modernen Browsern) */
+    transform: scale(1.5); margin-right: 10px !important; accent-color: #00ffcc;
 }
 
-/* 2. Zoom Buttons (Oben Links) */
 .leaflet-control-zoom {
-    margin-top: 20px !important;
-    margin-left: 20px !important;
-    border: none !important;
+    margin-top: 20px !important; margin-left: 20px !important; border: none !important;
 }
 .leaflet-control-zoom a {
-    background-color: rgba(15, 23, 42, 0.9) !important;
-    color: #fff !important;
-    width: 40px !important; /* Breiter */
-    height: 40px !important; /* Höher */
-    line-height: 40px !important;
-    font-size: 18px !important;
+    background-color: rgba(15, 23, 42, 0.9) !important; color: #fff !important;
+    width: 40px !important; height: 40px !important;
+    line-height: 40px !important; font-size: 18px !important;
     border-bottom: 1px solid #334155 !important;
 }
-.leaflet-touch .leaflet-bar a:first-child {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-}
-.leaflet-touch .leaflet-bar a:last-child {
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
+.leaflet-touch .leaflet-bar a:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+.leaflet-touch .leaflet-bar a:last-child { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
 
-/* 3. Attribution (Rechts Unten) - Aus der runden Ecke schieben */
 .leaflet-control-attribution {
-    background: rgba(15, 23, 42, 0.6) !important;
-    color: #94a3b8 !important;
-    border-radius: 4px;
-    margin-right: 15px !important;  /* Weg vom Rand */
-    margin-bottom: 15px !important; /* Weg von der Ecke */
+    background: rgba(15, 23, 42, 0.6) !important; color: #94a3b8 !important;
+    border-radius: 4px; margin-right: 15px !important; margin-bottom: 15px !important;
     font-size: 0.7rem !important;
 }
-.leaflet-control-attribution a {
-    color: #00ffcc !important;
-}
+.leaflet-control-attribution a { color: #00ffcc !important; }
 
-/* 4. Popup Style */
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-    background: rgba(15, 23, 42, 0.95);
-    color: white;
-    border: 1px solid #00ffcc;
-    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.95); color: white; border: 1px solid #00ffcc; border-radius: 8px;
 }
+.iss-icon-style { filter: invert(1) drop-shadow(0 0 8px #00ffcc); }
 
-/* 5. ISS Icon */
-.iss-icon-style {
-    filter: invert(1) drop-shadow(0 0 8px #00ffcc); 
+/* --- NEU: MEDIA QUERY FÜR LANDSCAPE (Querformat am Handy) --- */
+/* Greift, wenn der Bildschirm flach (max 500px hoch) und breit ist */
+@media (max-height: 500px) and (orientation: landscape) {
+    #info-panel {
+        bottom: 10px;        /* Weniger Abstand unten */
+        left: 10px;         /* Weniger Abstand links */
+        padding: 8px 12px;  /* Kompakteres Padding */
+        max-width: 45vw;    /* Schmaler */
+    }
+    
+    h2 { font-size: 0.9rem; }
+    
+    p { margin: 2px 0; font-size: 0.75rem; }
+    
+    /* Zoom Buttons etwas hochrutschen */
+    .leaflet-control-zoom {
+        margin-top: 10px !important;
+        margin-left: 10px !important;
+    }
 }

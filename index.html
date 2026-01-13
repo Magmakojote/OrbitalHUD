@@ -5,18 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>OrbitalHUD</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <meta name="theme-color" content="#1a1a1a"> <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3212/3212604.png">
+    <meta name="apple-mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
+    <meta name="theme-color" content="#1a1a1a"> 
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3212/3212604.png">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
-
-    <script src="https://unpkg.com/@joergdietrich/leaflet.terminator"></script>
 </head>
 <body>
     <div id="map"></div>
 
     <div id="info-panel">
-        <h2>OrbitalHUD <span class="beta-badge">BETA</span></h2>
+        <div class="header-row">
+            <h2>OrbitalHUD <span class="beta-badge">BETA</span></h2>
+            <button id="tracking-btn" class="active">● LIVE</button>
+        </div>
+        
         <div id="iss-meta">
             <p><strong>UTC Zeit:</strong> <span id="utc-time">--:--:--</span></p>
             <p><strong>Lichtverhältnisse:</strong> <span id="vis-status">--</span></p>
