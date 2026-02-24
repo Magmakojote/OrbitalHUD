@@ -2,7 +2,7 @@
 :root {
     --primary-color: #00ffcc;
     --error-color: #ff4444;
-    --bg-dark: rgba(15, 23, 42, 0.9);
+    --bg-dark: rgba(15, 23, 42, 0.95);
     --bg-glass: rgba(15, 23, 42, 0.85);
     --text-main: #f1f5f9;
     --text-dim: #94a3b8;
@@ -12,6 +12,7 @@
     --skeleton-bg: rgba(255, 255, 255, 0.05);
 }
 
+/* --- BASICS --- */
 body {
     margin: 0; padding: 0; background-color: #1a1a1a;
     font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden;
@@ -161,6 +162,16 @@ h2 {
 
 .beta-badge { font-size: 0.6em; color: #fff; background: #334155; padding: 2px 5px; border-radius: 3px; vertical-align: middle; }
 
-@media (max-width: 600px) { #info-panel { bottom: 20px; left: 10px; right: 10px; max-width: none; } }
+/* --- RESPONSIVE FIXES --- */
+@media (max-width: 600px) { 
+    /* Info-Panel auf dem Handy etwas höher setzen, um Attribution-Link nicht zu verdecken */
+    #info-panel { 
+        bottom: 50px; 
+        left: 10px; 
+        right: 10px; 
+        max-width: none; 
+    } 
+}
+
 .news-item a:hover { text-decoration: underline !important; opacity: 0.8; }
 .news-date { display: block; margin-bottom: 15px; letter-spacing: 1px; }
