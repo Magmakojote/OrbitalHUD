@@ -1,0 +1,17 @@
+# Betriebssystem-Dateien (verhindert Müll im Repo)
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE-spezifische Ordner (z.B. VS Code oder WebStorm)
+.vscode/
+.idea/
+
+# Für spätere Tools wie npm
+node_modules/
+dist/
+build/
+
+# Lokale Konfigurationsdateien
+.env
+*.log
