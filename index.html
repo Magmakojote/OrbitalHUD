@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>OrbitalHUD</title>
+    <title>OrbitalHUD | Real-time ISS Tracker</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes"> 
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
@@ -14,22 +14,64 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="map"></div>
+
+    <div id="map" class="theme-dark"></div>
+    
+    <div id="toast-container"></div>
+
+    <div id="news-overlay">
+        <div class="overlay-header">
+            <h2 style="margin:0">ISS DAILY BLOG <span class="beta-badge">NASA FEED</span></h2>
+            <button class="hud-btn active" onclick="UI_CONTROLLER.toggleOverlay('news-overlay')">SCHLIESSEN</button>
+        </div>
+        <div id="news-container" class="overlay-content"></div>
+    </div>
+
+    <div id="location-overlay">
+        <div class="overlay-header">
+            <h2 style="margin:0">SIGHTING SETUP</h2>
+            <button class="hud-btn active" onclick="UI_CONTROLLER.toggleOverlay('location-overlay')">SCHLIESSEN</button>
+        </div>
+        <div class="overlay-content">
+            <div class="location-section">
+                <p style="margin-bottom: 20px;">Gib deine Position an, um den nächsten Überflug zu berechnen.</p>
+                <button class="hud-btn active" style="width: 100%; max-width: 400px; margin-bottom: 20px; padding: 12px;" onclick="UI_CONTROLLER.useGeolocation()">GPS POSITION NUTZEN</button>
+                <div style="color: var(--text-slate); margin-bottom: 10px;">ODER MANUELL</div>
+                
+                <div class="search-container">
+                    <input type="text" id="city-input" class="hud-input" placeholder="Stadt eingeben..." autocomplete="off">
+                    <div id="suggestions" class="suggestions-list"></div>
+                </div>
+                <p id="location-status" style="font-size: 0.75rem; margin-top: 20px; color: var(--primary-color); min-height: 1.5em;"></p>
+            </div>
+        </div>
+    </div>
 
     <div id="info-panel">
         <div class="header-row">
-            <h2>OrbitalHUD <span class="beta-badge">BETA</span></h2>
-            <button id="tracking-btn" class="active">● Tracking</button>
+            <h2>OrbitalHUD</h2>
+            <div class="btn-group">
+                <button id="loc-btn" class="hud-btn" onclick="UI_CONTROLLER.toggleOverlay('location-overlay')" title="Standort festlegen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </button>
+                <button id="news-btn" class="hud-btn" onclick="UI_CONTROLLER.toggleOverlay('news-overlay')">NEWS</button>
+                <button id="tracking-btn" class="hud-btn active" onclick="MAP_ENGINE.toggleFollow()">● LIVE</button>
+            </div>
         </div>
-        
         <div id="iss-meta">
-            <p><strong>UTC Zeit:</strong> <span id="utc-time">--:--:--</span></p>
-            <p><strong>Lichtverhältnisse:</strong> <span id="vis-status">--</span></p>
+            <div class="telemetry-row"><strong>UTC Zeit:</strong> <span id="utc-time" class="telemetry-val">--:--:--</span></div>
+            <div class="telemetry-row"><strong>Sichtbarkeit:</strong> <span id="vis-status" class="telemetry-val">--</span></div>
+            <div class="telemetry-row" id="pass-row" style="display: none; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px; margin-top: 5px;">
+                <strong>Nächster Überflug:</strong> <span id="next-pass" class="telemetry-val">-- min</span>
+            </div>
         </div>
+        <div id="history-event" class="history-box">25 Jahre Forschung im Orbit</div>
+        <div id="stats-ticker" class="stats-ticker">Datenabgleich...</div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@joergdietrich/leaflet.terminator"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.1.3/satellite.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
