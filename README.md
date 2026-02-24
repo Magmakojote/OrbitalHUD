@@ -30,4 +30,4 @@ Da es sich um eine reine Client-seitige Anwendung handelt, ist keine komplexe In
 
 1. Repository klonen:
    ```bash
-   git clone [https://github.com/DEIN_USERNAME/OrbitalHUD.git](https://github.com/DEIN_USERNAME/OrbitalHUD.git)
+   git clone [https://github.com/magmakojote/OrbitalHUD.git](https://github.com/magmakojote/OrbitalHUD.git)
