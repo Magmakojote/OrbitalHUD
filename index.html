@@ -2,85 +2,305 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>OrbitalHUD | Real-time ISS Tracker</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes"> 
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
-    <meta name="theme-color" content="#1a1a1a"> 
-    
-    <link rel="icon" type="image/jpeg" href="app1.jpg?v=1">
-    
-    <link rel="apple-touch-icon" href="app1.jpg?v=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>OrbitalHUD 2.0 | Echtzeit ISS-Tracker</title>
+    <meta name="description" content="Echtzeit-Tracker für die Internationale Raumstation: Live-Position, Bodenspur, Tag/Nacht-Grenze, Überflugvorhersage für deinen Standort und NASA-News.">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
+    <!-- App / PWA -->
+    <meta name="theme-color" content="#0b1120">
+    <meta name="color-scheme" content="dark">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OrbitalHUD">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
+    <!-- Social Preview -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://magmakojote.github.io/OrbitalHUD/">
-    <meta property="og:title" content="OrbitalHUD | ISS Tracker">
-    <meta property="og:description" content="Interaktiver ISS-Tracker mit Echtzeit-Telemetrie und NASA News.">
-    <meta property="og:image" content="https://magmakojote.github.io/OrbitalHUD/app1.jpg?v=1">
+    <meta property="og:title" content="OrbitalHUD 2.0 | ISS Tracker">
+    <meta property="og:description" content="Interaktiver ISS-Tracker mit Bodenspur, Überflugvorhersage und NASA News.">
+    <meta property="og:image" content="https://magmakojote.github.io/OrbitalHUD/app1.jpg">
+
+    <link rel="preconnect" href="https://server.arcgisonline.com">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+<div id="app">
 
-    <div id="map" class="theme-dark"></div>
-    
-    <div id="toast-container"></div>
+    <!-- ===== KARTE ===== -->
+    <div id="map" class="theme-dark" role="application" aria-label="Weltkarte mit ISS-Position"></div>
 
-    <div id="news-overlay">
-        <div class="overlay-header">
-            <h2 style="margin:0">ISS DAILY BLOG <span class="beta-badge">NASA FEED</span></h2>
-            <button class="hud-btn active" onclick="UI_CONTROLLER.toggleOverlay('news-overlay')">SCHLIESSEN</button>
+    <!-- ===== TOP BAR ===== -->
+    <header class="topbar">
+        <div class="brand glass">
+            <svg class="brand-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20.2 7.2v9.6L12 21.5 3.8 16.8V7.2Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M5 19 19 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="19.6" cy="4.4" r="1.6" fill="currentColor"/><circle cx="4.4" cy="19.6" r="1.6" fill="currentColor"/></svg>
+            <span class="brand-name">OrbitalHUD</span>
+            <span class="brand-ver">2.0</span>
+            <span id="live-dot" class="live-dot" title="Datenstatus"></span>
         </div>
-        <div id="news-container" class="overlay-content"></div>
+        <button id="clock" class="clock glass" type="button" aria-label="Zeitanzeige zwischen UTC und Ortszeit wechseln">
+            <span id="clock-label" class="clock-label">UTC</span>
+            <span id="clock-time" class="mono">--:--:--</span>
+        </button>
+    </header>
+
+    <!-- ===== MAP BUTTONS ===== -->
+    <div class="map-fabs" id="map-fabs">
+        <button class="fab glass" id="btn-layers" type="button" aria-label="Kartenebenen" aria-expanded="false" aria-controls="layer-menu">
+            <svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
+        </button>
+        <button class="fab glass active" id="btn-follow" type="button" aria-label="ISS verfolgen" aria-pressed="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="7.5"/></svg>
+        </button>
+        <button class="fab glass" id="btn-me" type="button" aria-label="Zu meinem Standort">
+            <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </button>
+        <div class="fab-zoom glass desktop-only">
+            <button type="button" id="btn-zoom-in" aria-label="Hineinzoomen">+</button>
+            <button type="button" id="btn-zoom-out" aria-label="Herauszoomen">−</button>
+        </div>
     </div>
 
-    <div id="location-overlay">
-        <div class="overlay-header">
-            <h2 style="margin:0">SIGHTING SETUP</h2>
-            <button class="hud-btn active" onclick="UI_CONTROLLER.toggleOverlay('location-overlay')">SCHLIESSEN</button>
+    <div id="layer-menu" class="popover glass" hidden>
+        <div class="popover-title">Basiskarte</div>
+        <div class="seg-list" id="base-list" role="radiogroup" aria-label="Basiskarte"></div>
+        <div class="popover-title">Ebenen</div>
+        <label class="switch-row"><span>Tag / Nacht &amp; Dämmerung</span><input type="checkbox" data-overlay="night" checked><i></i></label>
+        <label class="switch-row"><span>Bodenspur (±1 Umlauf)</span><input type="checkbox" data-overlay="track" checked><i></i></label>
+        <label class="switch-row"><span>Footprint (Horizont)</span><input type="checkbox" data-overlay="footprint" checked><i></i></label>
+        <label class="switch-row"><span>Mein Sichtbereich (10°)</span><input type="checkbox" data-overlay="viewshed" checked><i></i></label>
+        <label class="switch-row"><span>Gradnetz</span><input type="checkbox" data-overlay="graticule"><i></i></label>
+    </div>
+
+    <div id="pass-banner" class="pass-banner glass" hidden>
+        <div>
+            <div class="pass-banner-title">Überflug-Ansicht</div>
+            <div id="pass-banner-text" class="pass-banner-text"></div>
         </div>
-        <div class="overlay-content">
-            <div class="location-section">
-                <p style="margin-bottom: 20px;">Gib deine Position an, um den nächsten Überflug zu berechnen.</p>
-                <button class="hud-btn active" style="width: 100%; max-width: 400px; margin-bottom: 20px; padding: 12px;" onclick="UI_CONTROLLER.useGeolocation()">GPS POSITION NUTZEN</button>
-                <div style="color: var(--text-slate); margin-bottom: 10px;">ODER MANUELL</div>
-                
-                <div class="search-container">
-                    <input type="text" id="city-input" class="hud-input" placeholder="Stadt eingeben..." autocomplete="off">
-                    <div id="suggestions" class="suggestions-list"></div>
+        <button type="button" id="pass-banner-close" class="chip">Schließen</button>
+    </div>
+
+    <!-- ===== BOTTOM SHEET ===== -->
+    <section id="sheet" class="sheet" data-state="peek" aria-label="Informationen">
+        <div class="sheet-grab" id="sheet-grab">
+            <div class="sheet-handle" aria-hidden="true"></div>
+
+            <!-- Kompakte Live-Zeile (immer sichtbar) -->
+            <div class="peek">
+                <div class="peek-region">
+                    <span class="peek-label">Überfliegt</span>
+                    <span id="peek-region" class="peek-region-name">Position wird berechnet …</span>
                 </div>
-                <p id="location-status" style="font-size: 0.75rem; margin-top: 20px; color: var(--primary-color); min-height: 1.5em;"></p>
+                <div class="peek-grid">
+                    <div class="stat stat-wide"><span class="stat-label">Position (WGS84)</span><span class="stat-val mono"><span id="p-lat">--</span>&ensp;<span id="p-lon">--</span></span></div>
+                    <div class="stat"><span class="stat-label">Höhe</span><span class="stat-val mono" id="p-alt">--</span></div>
+                    <div class="stat"><span class="stat-label">Tempo</span><span class="stat-val mono" id="p-vel">--</span></div>
+                </div>
+                <button type="button" class="next-pass-chip" id="peek-next" hidden></button>
             </div>
         </div>
-    </div>
 
-    <div id="info-panel">
-        <div class="header-row">
-            <h2>OrbitalHUD</h2>
-            <div class="btn-group">
-                <button id="loc-btn" class="hud-btn" onclick="UI_CONTROLLER.toggleOverlay('location-overlay')" title="Standort festlegen">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                </button>
-                <button id="news-btn" class="hud-btn" onclick="UI_CONTROLLER.toggleOverlay('news-overlay')">NEWS</button>
-                <button id="tracking-btn" class="hud-btn active" onclick="MAP_ENGINE.toggleFollow()">● LIVE</button>
-            </div>
-        </div>
-        <div id="iss-meta">
-            <div class="telemetry-row"><strong>UTC Zeit:</strong> <span id="utc-time" class="telemetry-val">--:--:--</span></div>
-            <div class="telemetry-row"><strong>Sichtbarkeit:</strong> <span id="vis-status" class="telemetry-val">--</span></div>
-            <div class="telemetry-row" id="pass-row" style="display: none; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px; margin-top: 5px;">
-                <strong>Nächster Überflug:</strong> <span id="next-pass" class="telemetry-val">-- min</span>
-            </div>
-        </div>
-        <div id="history-event" class="history-box">25 Jahre Forschung im Orbit</div>
-        <div id="stats-ticker" class="stats-ticker">Datenabgleich...</div>
-    </div>
+        <div class="sheet-body" id="sheet-body">
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/@joergdietrich/leaflet.terminator"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.1.3/satellite.min.js"></script>
-    <script src="script.js"></script>
+            <!-- LIVE -->
+            <div class="view" id="view-live" data-view="live">
+                <div class="card-grid">
+                    <div class="card stat-card"><span class="stat-label">Sichtbarkeit</span><span class="stat-big" id="l-vis">--</span><span class="stat-sub" id="l-vis-sub">&nbsp;</span></div>
+                    <div class="card stat-card"><span class="stat-label">Kurs</span><span class="stat-big mono" id="l-heading">--</span><span class="stat-sub" id="l-heading-sub">&nbsp;</span></div>
+                    <div class="card stat-card"><span class="stat-label">Geschwindigkeit</span><span class="stat-big mono" id="l-vel">--</span><span class="stat-sub mono" id="l-vel-sub">&nbsp;</span></div>
+                    <div class="card stat-card"><span class="stat-label">Footprint-Radius</span><span class="stat-big mono" id="l-foot">--</span><span class="stat-sub">Horizont 0° Elevation</span></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><h3>Subsatellitenpunkt</h3><button type="button" class="chip" id="btn-coordfmt">DMS</button></div>
+                    <div class="kv mono">
+                        <span>Koordinaten</span><span id="l-coord">--</span>
+                        <span>UTM (WGS84)</span><span id="l-utm">--</span>
+                        <span>Höhe ü. Ellipsoid</span><span id="l-alt">--</span>
+                    </div>
+                </div>
+
+                <div class="card" id="card-observer">
+                    <div class="card-head"><h3>Von deinem Standort</h3><span class="muted small" id="obs-name"></span></div>
+                    <div id="obs-empty" class="empty-mini">
+                        <p>Lege einen Standort fest, um Richtung, Entfernung und Überflüge zu sehen.</p>
+                        <button type="button" class="btn primary" data-goto="passes">Standort festlegen</button>
+                    </div>
+                    <div id="obs-data" class="kv mono" hidden>
+                        <span>Azimut</span><span id="o-az">--</span>
+                        <span>Elevation</span><span id="o-el">--</span>
+                        <span>Schrägentfernung</span><span id="o-range">--</span>
+                        <span>Bodendistanz</span><span id="o-ground">--</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><h3>Bahnelemente</h3><span class="muted small" id="tle-age"></span></div>
+                    <div class="kv mono">
+                        <span>Inklination</span><span id="e-inc">--</span>
+                        <span>Umlaufzeit</span><span id="e-period">--</span>
+                        <span>Umläufe / Tag</span><span id="e-revs">--</span>
+                        <span>Perigäum / Apogäum</span><span id="e-peri">--</span>
+                        <span>Exzentrizität</span><span id="e-ecc">--</span>
+                        <span>Umlauf-Nr.</span><span id="e-revnum">--</span>
+                        <span>Nächster Wechsel</span><span id="e-eclipse">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÜBERFLÜGE -->
+            <div class="view" id="view-passes" data-view="passes" hidden>
+                <div class="card" id="loc-card">
+                    <div class="card-head"><h3>Beobachtungsort</h3><button type="button" class="chip" id="btn-loc-edit" hidden>Ändern</button></div>
+                    <div id="loc-current" class="loc-current" hidden>
+                        <svg viewBox="0 0 24 24" class="ico"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <div><div id="loc-label" class="loc-label"></div><div id="loc-coords" class="muted small mono"></div></div>
+                    </div>
+                    <div id="loc-form">
+                        <button type="button" class="btn primary block" id="btn-gps">
+                            <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+                            GPS-Position nutzen
+                        </button>
+                        <div class="or">oder</div>
+                        <div class="search">
+                            <input type="search" id="city-input" class="input" placeholder="Ort suchen, z. B. Leipzig" autocomplete="off" enterkeyhint="search" aria-label="Ort suchen">
+                            <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
+                        </div>
+                        <p class="hint">Tipp: Lange auf die Karte tippen, um einen Punkt direkt als Standort zu setzen. Dein Standort bleibt nur auf diesem Gerät gespeichert.</p>
+                    </div>
+                    <p id="loc-status" class="status" aria-live="polite"></p>
+                </div>
+
+                <div id="passes-wrap" hidden>
+                    <div class="pass-toolbar">
+                        <div class="seg" role="tablist" aria-label="Filter">
+                            <button type="button" class="seg-btn active" data-filter="visible">Sichtbar</button>
+                            <button type="button" class="seg-btn" data-filter="all">Alle</button>
+                        </div>
+                        <span class="muted small" id="passes-meta"></span>
+                    </div>
+                    <div id="next-visible" class="card highlight" hidden></div>
+                    <div id="pass-list" class="pass-list"></div>
+                    <p class="hint">Sichtbar = ISS von der Sonne beleuchtet, während es bei dir mindestens bürgerlich dämmert (Sonne &lt; −6°). Helligkeit als Schätzung in mag (kleiner = heller).</p>
+                </div>
+            </div>
+
+            <!-- NEWS -->
+            <div class="view" id="view-news" data-view="news" hidden>
+                <div class="card-head news-head"><h3>ISS Blog <span class="badge">NASA</span></h3><button type="button" class="chip" id="btn-news-reload">Aktualisieren</button></div>
+                <div id="news-list" class="news-list"></div>
+            </div>
+
+            <!-- INFO -->
+            <div class="view" id="view-info" data-view="info" hidden>
+                <div class="card highlight">
+                    <span class="stat-label" id="today-label">Heute im Orbit</span>
+                    <p id="today-text" class="today-text"></p>
+                </div>
+                <div class="card fact-card">
+                    <span class="stat-label">Wusstest du?</span>
+                    <p id="fact-text" class="fact-text"></p>
+                    <div class="fact-dots" id="fact-dots"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><h3>Einstellungen</h3></div>
+                    <div class="setting">
+                        <span>Koordinaten</span>
+                        <div class="seg small" data-setting="coordFormat">
+                            <button type="button" class="seg-btn" data-value="dd">Dezimal</button>
+                            <button type="button" class="seg-btn" data-value="dms">DMS</button>
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <span>Zeitangaben</span>
+                        <div class="seg small" data-setting="timeZone">
+                            <button type="button" class="seg-btn" data-value="local">Ortszeit</button>
+                            <button type="button" class="seg-btn" data-value="utc">UTC</button>
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <span>Min. Elevation Überflüge</span>
+                        <div class="seg small" data-setting="minElevation">
+                            <button type="button" class="seg-btn" data-value="10">10°</button>
+                            <button type="button" class="seg-btn" data-value="20">20°</button>
+                            <button type="button" class="seg-btn" data-value="30">30°</button>
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <span>Standort</span>
+                        <button type="button" class="chip danger" id="btn-loc-clear">Löschen</button>
+                    </div>
+                </div>
+
+                <div class="card" id="install-card" hidden>
+                    <div class="card-head"><h3>Als App installieren</h3></div>
+                    <p class="muted" id="install-text">OrbitalHUD lässt sich wie eine App auf dem Homescreen ablegen und funktioniert dann auch offline mit den zuletzt geladenen Bahndaten.</p>
+                    <button type="button" class="btn primary" id="btn-install" hidden>Jetzt installieren</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><h3>Methodik &amp; Daten</h3></div>
+                    <ul class="method">
+                        <li><b>Position:</b> SGP4-Bahnmodell (satellite.js) aus aktuellen TLE-Bahndaten – lokal im Gerät berechnet, sekündlich aktualisiert.</li>
+                        <li><b>Koordinaten:</b> geodätisch, WGS84. UTM-Zone wird automatisch bestimmt.</li>
+                        <li><b>Tag/Nacht:</b> Sonnenstand nach Näherungsformel (Genauigkeit ≈ 0,01°), mit bürgerlicher, nautischer und astronomischer Dämmerung.</li>
+                        <li><b>Erdschatten:</b> zylindrisches Schattenmodell.</li>
+                        <li><b>Quellen:</b> CelesTrak / wheretheiss.at (TLE), OpenStreetMap Nominatim (Geocoding), NASA ISS Blog (News), Karten © CARTO, Esri, OpenTopoMap, OSM-Mitwirkende.</li>
+                    </ul>
+                    <div class="kv mono small" id="data-status"></div>
+                </div>
+
+                <div class="about">
+                    <img src="icons/icon-192.png" alt="" width="56" height="56">
+                    <div>
+                        <b>OrbitalHUD 2.0</b><br>
+                        <span class="muted small">Ein Geomatik-Projekt · <a href="https://github.com/magmakojote/OrbitalHUD" target="_blank" rel="noopener">GitHub</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TAB BAR ===== -->
+    <nav class="tabbar" id="tabbar" aria-label="Hauptnavigation">
+        <button type="button" class="tab active" data-tab="live" aria-current="page">
+            <svg viewBox="0 0 24 24"><path d="M4.5 16.5a10 10 0 0 1 0-9M19.5 7.5a10 10 0 0 1 0 9M8 14a5 5 0 0 1 0-4M16 10a5 5 0 0 1 0 4"/><circle cx="12" cy="12" r="1.6"/></svg>
+            <span>Live</span>
+        </button>
+        <button type="button" class="tab" data-tab="passes">
+            <svg viewBox="0 0 24 24"><path d="M3 18a9 9 0 0 1 18 0"/><path d="M3 18h18"/><circle cx="15.5" cy="11" r="1.6"/><path d="M6.5 13.5 13 11.4"/></svg>
+            <span>Überflüge</span>
+        </button>
+        <button type="button" class="tab" data-tab="news">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+            <span>News</span>
+        </button>
+        <button type="button" class="tab" data-tab="info">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>
+            <span>Info</span>
+        </button>
+    </nav>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <!-- Startbildschirm -->
+    <div id="splash" class="splash">
+        <img src="icons/icon-192.png" alt="" width="88" height="88">
+        <div class="splash-title">OrbitalHUD</div>
+        <div class="splash-sub" id="splash-sub">Lade Bahndaten …</div>
+        <div class="splash-bar"><span></span></div>
+    </div>
+</div>
+
+<noscript><p style="color:#fff;padding:20px">OrbitalHUD benötigt JavaScript.</p></noscript>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.1.3/satellite.min.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
