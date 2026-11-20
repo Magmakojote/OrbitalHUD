@@ -28,43 +28,44 @@ export async function fetchWithTimeout(url, { timeout = 8000, retries = 1, as = 
 const TLE_SOURCES = [
     {
         name: 'CelesTrak',
-        load: async () => parseTLE(await fetchWithTimeout('https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE', { as: 'text' }))
+        load: async () => parseTLE(await fetchWithTimeout('https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE', { as: 'text', retries: 0, timeout: 7000 }))
     },
     {
         name: 'wheretheiss.at',
         load: async () => {
-            const d = await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544/tles');
+            const d = await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544/tles', { retries: 0, timeout: 7000 });
             return { line1: d.line1, line2: d.line2 };
         }
     },
     {
         name: 'tle.ivanstanojevic.me',
         load: async () => {
-            const d = await fetchWithTimeout('https://tle.ivanstanojevic.me/api/tle/25544');
+            const d = await fetchWithTimeout('https://tle.ivanstanojevic.me/api/tle/25544', { retries: 0, timeout: 7000 });
             return { line1: d.line1, line2: d.line2 };
         }
     }
 ];
 
-const TLE_FRESH_MS = 3 * 3600 * 1000;      // jünger: kein Netzabruf nötig
 const TLE_MAX_AGE_MS = 14 * 86400 * 1000;  // älter: unbrauchbar
 
 /** Liefert TLE aus Cache oder Netz. { tle, source, fetchedAt, stale } */
 export async function loadTLE({ force = false } = {}) {
     const cached = storage.get('tle');
     const age = cached ? Date.now() - cached.fetchedAt : Infinity;
-    if (!force && cached && age < TLE_FRESH_MS) return { ...cached, fromCache: true };
+    // Gespeicherte Bahndaten sofort nutzen (die App aktualisiert sie danach im Hintergrund)
+    if (!force && cached && age < TLE_MAX_AGE_MS) return { ...cached, fromCache: true };
 
-    for (const src of TLE_SOURCES) {
-        try {
+    // Alle Quellen parallel abfragen – die schnellste gültige Antwort gewinnt
+    try {
+        const entry = await Promise.any(TLE_SOURCES.map(async (src) => {
             const tle = await src.load();
-            if (!tle.line1 || !tle.line2) continue;
-            const entry = { tle, source: src.name, fetchedAt: Date.now() };
-            storage.set('tle', entry);
-            return entry;
-        } catch (e) {
-            console.warn('TLE-Quelle fehlgeschlagen:', src.name, e.message);
-        }
+            if (!tle.line1 || !tle.line2) throw new Error('leer');
+            return { tle, source: src.name, fetchedAt: Date.now() };
+        }));
+        storage.set('tle', entry);
+        return entry;
+    } catch (e) {
+        console.warn('Alle TLE-Quellen fehlgeschlagen', e);
     }
     if (cached && age < TLE_MAX_AGE_MS) return { ...cached, fromCache: true, stale: true };
     throw new Error('Keine Bahndaten verfügbar');

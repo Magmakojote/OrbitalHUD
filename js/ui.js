@@ -77,13 +77,14 @@ export const sheet = {
         window.addEventListener('resize', () => { this.measure(); this.apply(false); });
         DESKTOP_MQ.addEventListener('change', () => { this.measure(); this.apply(false); });
         this.bindDrag();
-        // Peek-Inhalt kann wachsen (z. B. Überflug-Chip) → neu vermessen
+        // Die erste Karte der aktiven Ansicht bildet die Vorschau (Peek) → bei Größenänderung neu vermessen
         if ('ResizeObserver' in window) {
-            let last = 0;
-            new ResizeObserver(() => {
-                const h = this.el.querySelector('.sheet-grab').offsetHeight;
-                if (h !== last) { last = h; this.measure(); this.apply(false); }
-            }).observe(this.el.querySelector('.sheet-grab'));
+            const ro = new ResizeObserver(() => {
+                const before = this.heights.peek;
+                this.measure();
+                if (this.heights.peek !== before) this.apply(false);
+            });
+            $$('.view').forEach(v => ro.observe(v));
         }
         $$('#tabbar .tab').forEach(btn => btn.addEventListener('click', () => this.onTab(btn.dataset.tab)));
         $$('[data-goto]').forEach(btn => btn.addEventListener('click', () => this.openTab(btn.dataset.goto, 'half')));
@@ -95,10 +96,14 @@ export const sheet = {
     measure() {
         const vh = window.innerHeight;
         const tabbar = document.getElementById('tabbar').offsetHeight;
-        const peekEl = this.el.querySelector('.sheet-grab');
-        const peek = peekEl.offsetHeight;
+        const grab = this.el.querySelector('.sheet-grab').offsetHeight;
         const topSafe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-top')) || 0;
         const full = vh - tabbar - 64 - topSafe;
+        // Peek = Griff + erste sichtbare Karte der aktiven Ansicht (falls sie nicht zu groß ist)
+        const view = this.el.querySelector(`.view[data-view="${this.tab}"]`);
+        const first = view && [...view.children].find(c => !c.hidden && c.offsetHeight > 0);
+        const firstH = first ? first.offsetHeight + 14 : 0;
+        const peek = grab + (firstH && firstH <= Math.min(240, full * 0.45) ? firstH : 0);
         this.heights = { peek, half: Math.min(full, Math.round(vh * 0.52)), full };
         this.el.style.height = full + 'px';
     },
@@ -137,6 +142,7 @@ export const sheet = {
         });
         $$('.view').forEach(v => { v.hidden = v.dataset.view !== tab; });
         this.body.scrollTop = 0;
+        this.measure();
         if (state) this.state = state;
         else if (this.state === 'peek') this.state = 'half';
         this.apply(true);
@@ -212,9 +218,15 @@ export const sheet = {
         this.body.addEventListener('touchmove', e => {
             if (bodyStart === null || this.isDesktop()) return;
             const dy = e.touches[0].clientY - bodyStart;
-            if (dy > 12 && this.body.scrollTop <= 0 && !dragging) { down(bodyStart); }
+            // in der Vorschau (Peek) lässt sich das Sheet auch über den Inhalt hochziehen
+            if (!dragging && this.body.scrollTop <= 0 && (dy > 12 || (dy < -12 && this.state === 'peek'))) { down(bodyStart); }
             if (dragging) move(e.touches[0].clientY, e);
         }, { passive: false });
         this.body.addEventListener('touchend', () => { if (dragging) up(); bodyStart = null; });
+        // Tippen auf die Vorschau öffnet das Sheet
+        this.body.addEventListener('click', e => {
+            if (this.isDesktop() || this.state !== 'peek' || e.target.closest('button, a, input')) return;
+            this.setState('half');
+        });
     }
 };

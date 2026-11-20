@@ -88,49 +88,39 @@
     <section id="sheet" class="sheet" data-state="peek" aria-label="Informationen">
         <div class="sheet-grab" id="sheet-grab">
             <div class="sheet-handle" aria-hidden="true"></div>
-
-            <!-- Kompakte Live-Zeile (immer sichtbar) -->
-            <div class="peek">
-                <div class="peek-region">
-                    <span class="peek-label">Überfliegt</span>
-                    <span id="peek-region" class="peek-region-name">Position wird berechnet …</span>
-                </div>
-                <div class="peek-grid">
-                    <div class="stat stat-wide"><span class="stat-label">Position (WGS84)</span><span class="stat-val mono"><span id="p-lat">--</span>&ensp;<span id="p-lon">--</span></span></div>
-                    <div class="stat"><span class="stat-label">Höhe</span><span class="stat-val mono" id="p-alt">--</span></div>
-                    <div class="stat"><span class="stat-label">Tempo</span><span class="stat-val mono" id="p-vel">--</span></div>
-                </div>
-                <button type="button" class="next-pass-chip" id="peek-next" hidden></button>
-            </div>
         </div>
 
         <div class="sheet-body" id="sheet-body">
 
             <!-- LIVE -->
             <div class="view" id="view-live" data-view="live">
+                <div class="card hero">
+                    <span class="stat-label">ISS überfliegt gerade</span>
+                    <div id="live-region" class="hero-title">Position wird berechnet …</div>
+                    <div class="hero-grid">
+                        <div class="stat stat-wide"><span class="stat-label">Position</span><span class="stat-val mono" id="p-lat">--</span><span class="stat-val mono" id="p-lon">--</span></div>
+                        <div class="stat"><span class="stat-label">Höhe</span><span class="stat-val mono" id="p-alt">--</span></div>
+                        <div class="stat"><span class="stat-label">Tempo</span><span class="stat-val mono" id="p-vel">--</span></div>
+                    </div>
+                </div>
+
                 <div class="card-grid">
-                    <div class="card stat-card"><span class="stat-label">Sichtbarkeit</span><span class="stat-big" id="l-vis">--</span><span class="stat-sub" id="l-vis-sub">&nbsp;</span></div>
+                    <div class="card stat-card"><span class="stat-label">Beleuchtung</span><span class="stat-big" id="l-vis">--</span><span class="stat-sub" id="l-vis-sub">&nbsp;</span></div>
                     <div class="card stat-card"><span class="stat-label">Kurs</span><span class="stat-big mono" id="l-heading">--</span><span class="stat-sub" id="l-heading-sub">&nbsp;</span></div>
-                    <div class="card stat-card"><span class="stat-label">Geschwindigkeit</span><span class="stat-big mono" id="l-vel">--</span><span class="stat-sub mono" id="l-vel-sub">&nbsp;</span></div>
-                    <div class="card stat-card"><span class="stat-label">Footprint-Radius</span><span class="stat-big mono" id="l-foot">--</span><span class="stat-sub">Horizont 0° Elevation</span></div>
                 </div>
 
                 <div class="card">
-                    <div class="card-head"><h3>Subsatellitenpunkt</h3><button type="button" class="chip" id="btn-coordfmt">DMS</button></div>
+                    <div class="card-head"><h3>Geodaten</h3></div>
                     <div class="kv mono">
-                        <span>Koordinaten</span><span id="l-coord">--</span>
                         <span>UTM (WGS84)</span><span id="l-utm">--</span>
-                        <span>Höhe ü. Ellipsoid</span><span id="l-alt">--</span>
+                        <span>Bodengeschwindigkeit</span><span id="l-ground">--</span>
+                        <span>Footprint-Radius</span><span id="l-foot">--</span>
                     </div>
                 </div>
 
-                <div class="card" id="card-observer">
+                <div class="card" id="card-observer" hidden>
                     <div class="card-head"><h3>Von deinem Standort</h3><span class="muted small" id="obs-name"></span></div>
-                    <div id="obs-empty" class="empty-mini">
-                        <p>Lege einen Standort fest, um Richtung, Entfernung und Überflüge zu sehen.</p>
-                        <button type="button" class="btn primary" data-goto="passes">Standort festlegen</button>
-                    </div>
-                    <div id="obs-data" class="kv mono" hidden>
+                    <div id="obs-data" class="kv mono">
                         <span>Azimut</span><span id="o-az">--</span>
                         <span>Elevation</span><span id="o-el">--</span>
                         <span>Schrägentfernung</span><span id="o-range">--</span>
@@ -147,15 +137,22 @@
                         <span>Perigäum / Apogäum</span><span id="e-peri">--</span>
                         <span>Exzentrizität</span><span id="e-ecc">--</span>
                         <span>Umlauf-Nr.</span><span id="e-revnum">--</span>
-                        <span>Nächster Wechsel</span><span id="e-eclipse">--</span>
                     </div>
                 </div>
             </div>
 
             <!-- ÜBERFLÜGE -->
             <div class="view" id="view-passes" data-view="passes" hidden>
+                <div id="next-visible" class="card hero" hidden></div>
+
                 <div class="card" id="loc-card">
-                    <div class="card-head"><h3>Beobachtungsort</h3><button type="button" class="chip" id="btn-loc-edit" hidden>Ändern</button></div>
+                    <div class="card-head">
+                        <h3>Beobachtungsort</h3>
+                        <div class="chip-row">
+                            <button type="button" class="chip" id="btn-loc-edit" hidden>Ändern</button>
+                            <button type="button" class="chip danger" id="btn-loc-clear" hidden>Löschen</button>
+                        </div>
+                    </div>
                     <div id="loc-current" class="loc-current" hidden>
                         <svg viewBox="0 0 24 24" class="ico"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                         <div><div id="loc-label" class="loc-label"></div><div id="loc-coords" class="muted small mono"></div></div>
@@ -183,7 +180,6 @@
                         </div>
                         <span class="muted small" id="passes-meta"></span>
                     </div>
-                    <div id="next-visible" class="card highlight" hidden></div>
                     <div id="pass-list" class="pass-list"></div>
                     <p class="hint">Sichtbar = ISS von der Sonne beleuchtet, während es bei dir mindestens bürgerlich dämmert (Sonne &lt; −6°). Helligkeit als Schätzung in mag (kleiner = heller).</p>
                 </div>
@@ -231,10 +227,6 @@
                             <button type="button" class="seg-btn" data-value="30">30°</button>
                         </div>
                     </div>
-                    <div class="setting">
-                        <span>Standort</span>
-                        <button type="button" class="chip danger" id="btn-loc-clear">Löschen</button>
-                    </div>
                 </div>
 
                 <div class="card" id="install-card" hidden>
@@ -250,7 +242,7 @@
                         <li><b>Koordinaten:</b> geodätisch, WGS84. UTM-Zone wird automatisch bestimmt.</li>
                         <li><b>Tag/Nacht:</b> Sonnenstand nach Näherungsformel (Genauigkeit ≈ 0,01°), mit bürgerlicher, nautischer und astronomischer Dämmerung.</li>
                         <li><b>Erdschatten:</b> zylindrisches Schattenmodell.</li>
-                        <li><b>Quellen:</b> CelesTrak / wheretheiss.at (TLE), OpenStreetMap Nominatim (Geocoding), NASA ISS Blog (News), Karten © CARTO, Esri, OpenTopoMap, OSM-Mitwirkende.</li>
+                        <li><b>Quellen:</b> CelesTrak / wheretheiss.at (TLE), OpenStreetMap Nominatim (Geocoding), NASA ISS Blog (News), Karten © Esri, OpenTopoMap, OSM-Mitwirkende.</li>
                     </ul>
                     <div class="kv mono small" id="data-status"></div>
                 </div>

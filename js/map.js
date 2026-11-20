@@ -171,8 +171,6 @@ export const mapEngine = {
             const rings = capRings(anti.lat, anti.lon, (90 - depth) * DEG, 180);
             L.polygon(rings, { pane: 'night', stroke: false, fillColor: c.night, fillOpacity: c.nightOpacity, interactive: false }).addTo(this.layers.night);
         }
-        // Subsolarer Punkt
-        L.circleMarker([ss.lat, ss.lon], { pane: 'night', radius: 5, color: '#fbbf24', weight: 1.5, fillColor: '#fde68a', fillOpacity: 0.9, interactive: false }).addTo(this.layers.night);
     },
 
     buildGraticule() {

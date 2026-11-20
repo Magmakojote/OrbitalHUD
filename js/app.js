@@ -11,7 +11,7 @@ import { $, $$, esc, setText, toast, sheet, fmtDuration, fmtTime } from './ui.js
 import { passesView } from './passes.js';
 import { todayText, facts } from './data.js';
 
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 
 const app = {
     elements: null,
@@ -101,16 +101,15 @@ const app = {
     },
 
     renderLive(st, motion) {
+        // Nur rendern, was sichtbar ist (Akku schonen)
+        if (sheet.tab !== 'live') return;
+
         const mode = store.state.settings.coordFormat;
-        const d = mode === 'dms' ? 0 : 2;
-        setText('p-lat', mode === 'dms' ? formatCoord(st.lat, true, 'dms') : formatCoord(st.lat, true, 'dd', d));
-        setText('p-lon', mode === 'dms' ? formatCoord(st.lon, false, 'dms') : formatCoord(st.lon, false, 'dd', d));
+        setText('p-lat', formatCoord(st.lat, true, mode, 3));
+        setText('p-lon', formatCoord(st.lon, false, mode, 3));
         setText('p-alt', `${fmt(st.alt, 0)} km`);
         setText('p-vel', `${fmt(st.speed, 2)} km/s`);
-
-        // Nur rendern, was sichtbar ist (Akku schonen)
         if (sheet.state === 'peek' && !sheet.isDesktop()) return;
-        if (sheet.tab !== 'live') return;
 
         const vis = $('#l-vis');
         setText(vis, st.sunlit ? 'Sonnenlicht' : 'Erdschatten');
@@ -118,13 +117,9 @@ const app = {
         setText('l-vis-sub', this.eclipseText());
         setText('l-heading', `${Math.round(motion.heading)}°`);
         setText('l-heading-sub', `Richtung ${compass(motion.heading)}`);
-        setText('l-vel', `${fmt(st.speed, 2)} km/s`);
-        setText('l-vel-sub', `Boden: ${fmt(motion.groundSpeed, 2)} km/s`);
+        setText('l-ground', `${fmt(motion.groundSpeed, 2)} km/s`);
         setText('l-foot', `${fmt(footprintAngle(st.alt) * R_EARTH, 0)} km`);
-        setText('l-coord', `${formatCoord(st.lat, true, mode, 4)}  ${formatCoord(st.lon, false, mode, 4)}`);
         setText('l-utm', formatUTM(st.lat, st.lon));
-        setText('l-alt', `${fmt(st.alt, 1)} km`);
-        setText('btn-coordfmt', mode === 'dms' ? 'Dezimal' : 'DMS');
 
         const loc = store.state.location;
         if (loc) {
@@ -145,7 +140,6 @@ const app = {
         if (!this.eclipse || this.eclipse.date < new Date()) this.eclipse = nextShadowTransition(satrec);
         if (!this.eclipse) return '';
         const rest = fmtDuration(this.eclipse.date - Date.now());
-        setText('e-eclipse', `${this.eclipse.toSunlit ? 'Sonnenaufgang' : 'Sonnenuntergang'} in ${rest}`);
         return `${this.eclipse.toSunlit ? 'Orbit-Sonnenaufgang' : 'Orbit-Sonnenuntergang'} in ${rest}`;
     },
 
@@ -172,7 +166,7 @@ const app = {
     async updateRegion(st) {
         const now = Date.now();
         const ocean = oceanName(st.lat, st.lon);
-        if (!this.regionLabel) setText('peek-region', `≈ ${ocean}`);
+        if (!this.regionLabel) setText('live-region', `≈ ${ocean}`);
         if (now - this.lastRegionAt < 30000 || !navigator.onLine) return;
         if (this.lastRegionPos && haversine(st.lat, st.lon, ...this.lastRegionPos) < 150) return;
         this.lastRegionAt = now;
@@ -181,7 +175,7 @@ const app = {
             const r = await reverseGeocode(st.lat, st.lon, 5);
             this.regionLabel = r?.country ? [r.state, r.country].filter(Boolean).join(', ') : `≈ ${ocean}`;
         } catch { this.regionLabel = `≈ ${ocean}`; }
-        setText('peek-region', this.regionLabel);
+        setText('live-region', this.regionLabel);
     },
 
     /* ---------- Bedienelemente ---------- */
@@ -221,9 +215,6 @@ const app = {
         document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('#layer-menu')) toggleMenu(false); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleMenu(false); });
 
-        // Koordinatenformat-Schnellumschalter
-        $('#btn-coordfmt').addEventListener('click', () => store.setSetting('coordFormat', store.state.settings.coordFormat === 'dms' ? 'dd' : 'dms'));
-
         // Einstellungen (Segment-Buttons)
         $$('[data-setting]').forEach(group => {
             const key = group.dataset.setting;
@@ -238,11 +229,6 @@ const app = {
             store.on('settings', ({ key: k }) => { if (k === key) sync(); });
         });
         store.on('settings', ({ key }) => { if (key === 'coordFormat') this.tick(); });
-
-        $('#btn-loc-clear').addEventListener('click', () => {
-            if (!store.state.location) { toast('Es ist kein Standort gespeichert.', 'info', 2000); return; }
-            store.setLocation(null); store.state.passes = []; toast('Standort gelöscht.', 'ok', 2000);
-        });
 
         // Tabs mit Inhalten laden
         store.on('tab', (tab) => {

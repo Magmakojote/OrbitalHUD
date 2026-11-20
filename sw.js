@@ -4,7 +4,7 @@
  * - Kartenkacheln: Stale-while-revalidate mit Größenlimit
  * - APIs: immer Netz (die App cached Bahndaten selbst im localStorage)
  */
-const VERSION = 'v2.0.0';
+const VERSION = 'v2.0.1';
 const SHELL = `orbitalhud-shell-${VERSION}`;
 const TILES = 'orbitalhud-tiles-v1';
 const MAX_TILES = 400;

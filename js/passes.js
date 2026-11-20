@@ -27,8 +27,12 @@ export const passesView = {
             this.render();
         }));
         $('#pass-list').addEventListener('click', (e) => this.onListClick(e));
-        $('#peek-next').addEventListener('click', () => {
-            sheet.openTab('passes', 'half');
+        $('#btn-loc-clear').addEventListener('click', () => {
+            expandedId = null;
+            store.state.passes = [];
+            store.setLocation(null);
+            mapEngine.clearPass();
+            toast('Standort gelöscht.', 'ok', 2000);
         });
         $('#pass-banner-close').addEventListener('click', () => mapEngine.setFollow(true));
         store.on('pass-cleared', () => { $('#pass-banner').hidden = true; });
@@ -46,6 +50,7 @@ export const passesView = {
     showForm(show) {
         $('#loc-form').hidden = !show;
         $('#btn-loc-edit').hidden = show || !store.state.location;
+        $('#btn-loc-clear').hidden = !store.state.location;
         if (show) setTimeout(() => $('#city-input').focus(), 50);
     },
 
@@ -54,8 +59,7 @@ export const passesView = {
         const fmtMode = store.state.settings.coordFormat;
         $('#loc-current').hidden = !loc;
         $('#passes-wrap').hidden = !loc;
-        $('#obs-empty').hidden = !!loc;
-        $('#obs-data').hidden = !loc;
+        $('#card-observer').hidden = !loc;
         if (loc) {
             setText('loc-label', loc.label);
             setText('loc-coords', `${formatCoord(loc.lat, true, fmtMode, 4)}  ${formatCoord(loc.lon, false, fmtMode, 4)}`);
@@ -64,7 +68,7 @@ export const passesView = {
         } else {
             setText('obs-name', '');
             this.showForm(true);
-            $('#peek-next').hidden = true;
+            $('#next-visible').hidden = true;
         }
     },
 
@@ -181,7 +185,7 @@ export const passesView = {
         if (!store.state.satrec) { box.innerHTML = '<div class="empty">Warte auf Bahndaten …</div>'; return; }
         if (!list.length) {
             box.innerHTML = `<div class="empty">${filter === 'visible'
-                ? 'In den nächsten 10 Tagen ist die ISS von hier aus nicht mit bloßem Auge sichtbar (z. B. wegen heller Sommernächte oder ungünstiger Bahnlage).<br><button type="button" class="chip" data-show-all>Alle Überflüge zeigen</button>'
+                ? 'Keine sichtbaren Überflüge – z. B. wegen heller Sommernächte oder ungünstiger Bahnlage.<br><button type="button" class="chip" data-show-all>Alle Überflüge zeigen</button>'
                 : 'Keine Überflüge über der Mindestelevation gefunden.'}</div>`;
             return;
         }
@@ -261,23 +265,20 @@ export const passesView = {
     },
 
     renderCountdown() {
-        const chip = $('#peek-next');
         const card = $('#next-visible');
         const now = Date.now();
         const next = store.state.passes.find(p => p.kind === 'visible' && p.end.time > now);
-        if (!store.state.location || !next) {
-            chip.hidden = !store.state.location;
-            if (store.state.location) chip.innerHTML = '<span class="dot k-shadow"></span>Kein sichtbarer Überflug in 10 Tagen';
-            card.hidden = true;
+        if (!store.state.location || !store.state.satrec) { card.hidden = true; return; }
+        card.hidden = false;
+        if (!next) {
+            card.classList.remove('live');
+            card.innerHTML = `<span class="stat-label">Nächster sichtbarer Überflug</span>
+                <p class="nv-none">In den nächsten 10 Tagen ist die ISS von hier aus nicht mit bloßem Auge sichtbar.</p>`;
             return;
         }
         const s = next.visibleStart || next.start;
         const inProgress = s.time <= now;
-        const txt = inProgress ? 'JETZT sichtbar!' : `in ${fmtDuration(s.time - now)}`;
-        chip.hidden = false;
-        chip.classList.toggle('live', inProgress);
-        chip.innerHTML = `<span class="dot k-visible"></span>Nächster sichtbarer Überflug <b>${txt}</b>`;
-        card.hidden = false;
+        card.classList.toggle('live', inProgress);
         card.innerHTML = `
             <span class="stat-label">Nächster sichtbarer Überflug</span>
             <div class="nv-row">
